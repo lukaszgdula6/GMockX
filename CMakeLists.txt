@@ -6,8 +6,9 @@ add_executable(${PROJECT_NAME}
 )
 
 project(GMockX_tests)
-set(PROJECT_NAME_TESTS ${PROJECT_NAME}_tests)
+set(PROJECT_NAME_TESTS ${PROJECT_NAME})
 include_directories(${PROJECT_NAME_TESTS},
+    "."
     "tests"
     "tests/gmock"
     "tests/gtest"
@@ -15,4 +16,5 @@ include_directories(${PROJECT_NAME_TESTS},
 add_executable(${PROJECT_NAME_TESTS}
     "tests/gmock_main.cc"
     "tests/gmock-gtest-all.cc"
+    "tests/MockListTest.cpp"
 )
