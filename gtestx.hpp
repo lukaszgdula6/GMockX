@@ -30,10 +30,13 @@ public:
     {
         PendingMockException(std::size_t numOfMocksPending);
     };
-
     struct MockAlreadyRegisteredException : std::runtime_error
     {
         MockAlreadyRegisteredException(const MockType *mock);
+    };
+    struct MockNotRegisteredException : std::runtime_error
+    {
+        MockNotRegisteredException(const MockType *mock);
     };
 
     void registerMock(MockType *mock);
@@ -87,9 +90,12 @@ MockList<MockType, ClassType>::PendingMockException::PendingMockException(std::s
 
 template<typename MockType, typename ClassType>
 MockList<MockType, ClassType>::MockAlreadyRegisteredException::MockAlreadyRegisteredException(const MockType *mock)
-    : std::runtime_error(std::string("Mock already registered: ") + to_hex(mock))
+    : std::runtime_error(std::string("Mock: ") + typeid(MockType).name() + " at: " + to_hex(mock) + " already registered")
 {}
-
+template<typename MockType, typename ClassType>
+MockList<MockType, ClassType>::MockNotRegisteredException::MockNotRegisteredException(const MockType *mock)
+    : std::runtime_error(std::string("Mock: ") + typeid(MockType).name() + " at: " + to_hex(mock) + " not registered")
+{}
 
 template<typename MockType, typename ClassType>
 void MockList<MockType, ClassType>::registerMock(MockType *mock)
@@ -104,6 +110,13 @@ void MockList<MockType, ClassType>::unregisterMock(MockType *mock)
 {
     if (std::find(mocks.begin(), mocks.end(), mock) != mocks.end())
         throw PendingMockException(mocks.size());
+    for (typename Map::iterator it = mapping.begin(); it != mapping.end(); ++it)
+        if (it->second == mock)
+        {
+            mapping.erase(it);
+            return ;
+        }
+    throw MockNotRegisteredException(mock);
 }
 
 template<typename MockType, typename ClassType>
