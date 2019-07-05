@@ -17,4 +17,5 @@ add_executable(${PROJECT_NAME_TESTS}
     "tests/gmock_main.cc"
     "tests/gmock-gtest-all.cc"
     "tests/MockListTest.cpp"
+    "tests/MocksTest.cpp"
 )

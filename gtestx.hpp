@@ -1,5 +1,5 @@
-#ifndef GTESTX_HPP
-#define GTESTX_HPP
+#ifndef GMOCKX_HPP
+#define GMOCKX_HPP
 
 #include "gmock.h"
 #include "gtest.h"
@@ -52,6 +52,31 @@ private:
     Mocks mocks;
     Map mapping;
 };
+
+static unsigned GMOCKX_ATTRIBUTE_MOCK_CTOR = 0x0001;
+static unsigned GMOCKX_ATTRIBUTE_MOCK_DTOR = 0x0002;
+
+#define MAKE_GMOCKX_MOCK_TORS_C(className, ctorName, dtorName) \
+    private: \
+    unsigned gtestxAttributes; \
+    public: \
+    #className() \
+    {} \
+    #className(unsigned attributes) : gtestxAttributes(attributes) \
+    { \
+        if (attributes & GMOCKX_ATTRIBUTE_MOCK_CTOR) \
+            #ctorName(); \
+    } \
+    ~#className() \
+    { \
+        if (attributes & GMOCKX_ATTRIBUTE_MOCK_DTOR) \
+            #dtorName(); \
+    }\
+//    MOCK_METHOD0(#ctorName); \
+//    MOCK_METHOD0(#dtorName); \
+
+#define MAKE_GMOCKX_MOCK_TORS(className) \
+    MAKE_GMOCKX_MOCK_TORS_C(#className, ctor, dtor)
 
 namespace
 {
@@ -152,4 +177,4 @@ MockList<MockType, ClassType> &MockList<MockType, ClassType>::instance()
 
 }
 
-#endif // GTESTX_HPP
+#endif // GMOCKX_HPP
