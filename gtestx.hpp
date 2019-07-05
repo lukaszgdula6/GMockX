@@ -56,27 +56,31 @@ private:
 static unsigned GMOCKX_ATTRIBUTE_MOCK_CTOR = 0x0001;
 static unsigned GMOCKX_ATTRIBUTE_MOCK_DTOR = 0x0002;
 
-#define MAKE_GMOCKX_MOCK_TORS_C(className, ctorName, dtorName) \
+#define MAKE_GMOCKX_MOCK_TORS_C(mockName, className, ctorName, dtorName) \
     private: \
     unsigned gtestxAttributes; \
     public: \
-    #className() \
-    {} \
-    #className(unsigned attributes) : gtestxAttributes(attributes) \
+    mockName() \
     { \
-        if (attributes & GMOCKX_ATTRIBUTE_MOCK_CTOR) \
-            #ctorName(); \
+        MockList<mockName, className>::instance().registerMock(this); \
     } \
-    ~#className() \
+    mockName(unsigned attributes) : gtestxAttributes(attributes) \
     { \
-        if (attributes & GMOCKX_ATTRIBUTE_MOCK_DTOR) \
-            #dtorName(); \
-    }\
-//    MOCK_METHOD0(#ctorName); \
-//    MOCK_METHOD0(#dtorName); \
+        MockList<mockName, className>::instance().registerMock(this); \
+        if (gtestxAttributes & GMOCKX_ATTRIBUTE_MOCK_CTOR) \
+            ctorName(); \
+    } \
+    ~mockName() \
+    { \
+        if (gtestxAttributes & GMOCKX_ATTRIBUTE_MOCK_DTOR) \
+            dtorName(); \
+        MockList<mockName, className>::instance().unregisterMock(this); \
+    } \
+    MOCK_METHOD0(ctorName, void()); \
+    MOCK_METHOD0(dtorName, void()); \
 
-#define MAKE_GMOCKX_MOCK_TORS(className) \
-    MAKE_GMOCKX_MOCK_TORS_C(#className, ctor, dtor)
+#define MAKE_GMOCKX_MOCK_TORS(mockName, className) \
+    MAKE_GMOCKX_MOCK_TORS_C(mockName, className, ctor, dtor)
 
 namespace
 {
