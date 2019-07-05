@@ -31,3 +31,11 @@ TEST(MockListTest, shouldThrowWhenMockNotCalled)
     Class1 c;
     EXPECT_THROW(MockList1::instance().findMockFor(&c), NoMockException1);
 }
+
+TEST(MockListTest, shouldHaveRegisteredMock)
+{
+    Class1 c;
+    Mock1 m;
+    MockList1::instance().registerMock(&m);
+    EXPECT_EQ(&m, MockList1::instance().findMockFor(&c));
+}
