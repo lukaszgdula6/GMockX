@@ -10,21 +10,24 @@ struct Mock1 {};
 struct Class2 {};
 struct Mock2 {};
 
-struct MockListTestSuite : Test
-{
-    MockList<Mock1, Class1> list1;
-    MockList<Mock2, Class2> list2;
-};
+typedef MockList<Mock1, Class1> MockList1;
+typedef MockList1::NoMockException NoMockException1;
+typedef MockList1::PendingMockException PendingMockException1;
 
-TEST_F(MockListTestSuite, shouldThrowWhenNoMocksRegistered)
+TEST(MockListTest, shouldThrowWhenNoMocksRegistered)
 {
-    typedef MockList<Mock1, Class1>::NoMockException NoMockException;
     Class1 c;
-    EXPECT_THROW(list1.findMockFor(&c), NoMockException);
+    EXPECT_THROW(MockList1::instance().findMockFor(&c), NoMockException1);
 }
 
-TEST_F(MockListTestSuite, shouldAllowUnregisterNotRegisteredMock)
+TEST(MockListTest, shouldAllowUnregisterNotRegisteredMock)
 {
     Mock1 m;
-    list1.unregisterMock(&m);
+    MockList1::instance().unregisterMock(&m);
+}
+
+TEST(MockListTest, shouldThrowWhenMockNotCalled)
+{
+    Class1 c;
+    EXPECT_THROW(MockList1::instance().findMockFor(&c), NoMockException1);
 }

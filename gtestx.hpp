@@ -93,7 +93,7 @@ MockType *MockList<MockType, ClassType>::findMockFor(const ClassType *c)
 template<typename MockType, typename ClassType>
 MockList<MockType, ClassType> &MockList<MockType, ClassType>::instance()
 {
-    static MockList<ClassType, MockType> inst;
+    static MockList<MockType, ClassType> inst;
     return inst;
 }
 
