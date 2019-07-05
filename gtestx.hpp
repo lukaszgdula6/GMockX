@@ -31,6 +31,11 @@ public:
         PendingMockException(std::size_t numOfMocksPending);
     };
 
+    struct MockAlreadyRegisteredException : std::runtime_error
+    {
+        MockAlreadyRegisteredException(const MockType *mock);
+    };
+
     void registerMock(MockType *mock);
     void unregisterMock(MockType *mock);
     MockType *findMockFor(const ClassType *c);
@@ -43,6 +48,27 @@ private:
     Mocks mocks;
     Map mapping;
 };
+
+namespace
+{
+template <typename T>
+inline std::string to_hex(const T *ptr)
+{
+    unsigned long long value = reinterpret_cast<unsigned long long>(ptr);
+    std::size_t expectedHexSize = sizeof(T*) * 2;
+    std::string result;
+    result.reserve(expectedHexSize + 2);
+    while (value)
+    {
+        char c = value & 0x0F;
+        result.insert(0, 1, c < 10 ? '0' + c : 'A' + c - 10);
+        value = value >> 4;
+    }
+    result.insert(0, expectedHexSize - result.size(), '0');
+    result.insert(0, "0x");
+    return result;
+}
+}
 
 template<typename MockType, typename ClassType>
 MockList<MockType, ClassType>::MockForNullException::MockForNullException()
@@ -59,10 +85,17 @@ MockList<MockType, ClassType>::PendingMockException::PendingMockException(std::s
     : std::runtime_error(std::string("Total ") + std::to_string(numOfMocksPending) + " pending mock(s): " + typeid(MockType).name())
 {}
 
+template<typename MockType, typename ClassType>
+MockList<MockType, ClassType>::MockAlreadyRegisteredException::MockAlreadyRegisteredException(const MockType *mock)
+    : std::runtime_error(std::string("Mock already registered: ") + to_hex(mock))
+{}
+
 
 template<typename MockType, typename ClassType>
 void MockList<MockType, ClassType>::registerMock(MockType *mock)
 {
+    if (std::find(mocks.begin(), mocks.end(), mock) != mocks.end())
+        throw MockAlreadyRegisteredException(mock);
     mocks.push_back(mock);
 }
 
