@@ -42,6 +42,7 @@ public:
     void registerMock(MockType *mock);
     void unregisterMock(MockType *mock);
     MockType *findMockFor(const ClassType *c);
+    void forget(const MockType *mock);
 
     static MockList<MockType, ClassType> &instance();
 
@@ -110,13 +111,7 @@ void MockList<MockType, ClassType>::unregisterMock(MockType *mock)
 {
     if (std::find(mocks.begin(), mocks.end(), mock) != mocks.end())
         throw PendingMockException(mocks.size());
-    for (typename Map::iterator it = mapping.begin(); it != mapping.end(); ++it)
-        if (it->second == mock)
-        {
-            mapping.erase(it);
-            return ;
-        }
-    throw MockNotRegisteredException(mock);
+    forget(mock);
 }
 
 template<typename MockType, typename ClassType>
@@ -134,6 +129,18 @@ MockType *MockList<MockType, ClassType>::findMockFor(const ClassType *c)
     MockType *mock = mocks.front();
     mocks.pop_front();
     return mapping[c] = mock;
+}
+
+template<typename MockType, typename ClassType>
+void MockList<MockType, ClassType>::forget(const MockType *mock)
+{
+    for (typename Map::iterator it = mapping.begin(); it != mapping.end(); ++it)
+        if (it->second == mock)
+        {
+            mapping.erase(it);
+            return ;
+        }
+    throw MockNotRegisteredException(mock);
 }
 
 template<typename MockType, typename ClassType>

@@ -141,3 +141,23 @@ TEST_F(MockListTestSuite, unregisteredMockShouldBeNotAssigned)
     mockList1.unregisterMock(&m);
     EXPECT_THROW(mockList1.findMockFor(&c), NoMockException1);
 }
+
+TEST_F(MockListTestSuite, shouldForgetMock)
+{
+    Class1 c;
+    Mock1 m1, m2;
+
+    mockList1.registerMock(&m1);
+    mockList1.registerMock(&m2);
+    EXPECT_EQ(&m1, mockList1.findMockFor(&c));
+    mockList1.forget(&m1);
+    EXPECT_EQ(&m2, mockList1.findMockFor(&c));
+}
+
+TEST_F(MockListTestSuite, shouldNotForgetUnusedMock)
+{
+    Mock1 m;
+    EXPECT_THROW(mockList1.forget(&m), MockNotRegisteredException1);
+    mockList1.registerMock(&m);
+    EXPECT_THROW(mockList1.forget(&m), MockNotRegisteredException1);
+}
