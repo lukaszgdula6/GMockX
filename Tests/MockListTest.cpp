@@ -161,3 +161,23 @@ TEST_F(MockListTestSuite, shouldNotForgetUnusedMock)
     mockList1.registerMock(&m);
     EXPECT_THROW(mockList1.forget(&m), MockNotRegisteredException1);
 }
+
+TEST_F(MockListTestSuite, shouldRegisterStaticMock)
+{
+    Mock1 mock;
+    mockList1.registerStaticMock(&mock);
+    EXPECT_EQ(&mock, mockList1.getStaticMock());
+}
+
+TEST_F(MockListTestSuite, shouldNotDoubleRegisterStaticMock)
+{
+    Mock1 mock;
+    mockList1.registerStaticMock(&mock);
+    EXPECT_THROW(mockList1.registerStaticMock(&mock), MockAlreadyRegisteredException1);
+}
+
+TEST_F(MockListTestSuite, shouldNotHaveNotRegisteredStaticMock)
+{
+    Mock1 mock;
+    EXPECT_THROW(mockList1.getStaticMock(), NoMockException1);
+}

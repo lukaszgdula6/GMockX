@@ -40,8 +40,10 @@ public:
     };
 
     void registerMock(MockType *mock);
+    void registerStaticMock(MockType *mock);
     void unregisterMock(MockType *mock);
     MockType *findMockFor(const ClassType *c);
+    MockType *getStaticMock();
     void forget(const MockType *mock);
 
     static MockList<MockType, ClassType> &instance();
@@ -53,34 +55,18 @@ private:
     Map mapping;
 };
 
-static unsigned GMOCKX_ATTRIBUTE_MOCK_CTOR = 0x0001;
-static unsigned GMOCKX_ATTRIBUTE_MOCK_DTOR = 0x0002;
-
-#define MAKE_GMOCKX_MOCK_TORS_C(mockName, className, ctorName, dtorName) \
-    private: \
-    unsigned gtestxAttributes; \
-    public: \
-    mockName() \
+#define MAKE_GMOCKX_MOCK_TORS(mockName, className) \
+    mockName(bool registerForDynamic = true, bool registerForStatic = false) \
     { \
-        MockList<mockName, className>::instance().registerMock(this); \
-    } \
-    mockName(unsigned attributes) : gtestxAttributes(attributes) \
-    { \
-        MockList<mockName, className>::instance().registerMock(this); \
-        if (gtestxAttributes & GMOCKX_ATTRIBUTE_MOCK_CTOR) \
-            ctorName(); \
+        if (registerForDynamic) \
+            MockList<mockName, className>::instance().registerMock(this); \
+        if (registerForStatic) \
+            MockList<mockName, className>::instance().registerStaticMock(this); \
     } \
     ~mockName() \
     { \
-        if (gtestxAttributes & GMOCKX_ATTRIBUTE_MOCK_DTOR) \
-            dtorName(); \
         MockList<mockName, className>::instance().unregisterMock(this); \
     } \
-    MOCK_METHOD0(ctorName, void()); \
-    MOCK_METHOD0(dtorName, void()); \
-
-#define MAKE_GMOCKX_MOCK_TORS(mockName, className) \
-    MAKE_GMOCKX_MOCK_TORS_C(mockName, className, ctor, dtor)
 
 namespace
 {
@@ -136,6 +122,15 @@ void MockList<MockType, ClassType>::registerMock(MockType *mock)
 }
 
 template<typename MockType, typename ClassType>
+void MockList<MockType, ClassType>::registerStaticMock(MockType *mock)
+{
+    for (typename Map::iterator it = mapping.begin(); it != mapping.end(); ++it)
+        if ((!it->first) && (it->second == mock))
+            throw MockAlreadyRegisteredException(mock);
+    mapping[NULL] = mock;
+}
+
+template<typename MockType, typename ClassType>
 void MockList<MockType, ClassType>::unregisterMock(MockType *mock)
 {
     if (std::find(mocks.begin(), mocks.end(), mock) != mocks.end())
@@ -158,6 +153,15 @@ MockType *MockList<MockType, ClassType>::findMockFor(const ClassType *c)
     MockType *mock = mocks.front();
     mocks.pop_front();
     return mapping[c] = mock;
+}
+
+template<typename MockType, typename ClassType>
+MockType *MockList<MockType, ClassType>::getStaticMock()
+{
+    typename Map::iterator it = mapping.find(NULL);
+    if (it == mapping.end())
+        throw NoMockException();
+    return it->second;
 }
 
 template<typename MockType, typename ClassType>
