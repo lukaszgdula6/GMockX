@@ -33,3 +33,18 @@ TEST(MocksTest, shouldUnregisterOldMock)
     }
     EXPECT_THROW(MockList1::instance().findMockFor(&c), MockList1::NoMockException);
 }
+
+TEST(MocksTest, shouldRegisterNewStaticMock)
+{
+    Mock1 m(GMOCKX_NO_DYNAMIC_REGISTRATION, GMOCKX_STATIC_REGISTRATION);
+    Class1 c;
+    EXPECT_EQ(&m, MockList1::instance().getStaticMock());
+}
+
+TEST(MocksTest, shouldRegisterNewDYnamicAndStaticMock)
+{
+    Mock1 m(GMOCKX_DYNAMIC_REGISTRATION, GMOCKX_STATIC_REGISTRATION);
+    Class1 c;
+    EXPECT_EQ(&m, MockList1::instance().getStaticMock());
+    EXPECT_EQ(&m, MockList1::instance().findMockFor(&c));
+}

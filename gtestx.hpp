@@ -55,8 +55,13 @@ private:
     Map mapping;
 };
 
+static bool GMOCKX_NO_DYNAMIC_REGISTRATION = false;
+static bool GMOCKX_DYNAMIC_REGISTRATION = true;
+static bool GMOCKX_NO_STATIC_REGISTRATION = false;
+static bool GMOCKX_STATIC_REGISTRATION = true;
+
 #define MAKE_GMOCKX_MOCK_TORS(mockName, className) \
-    mockName(bool registerForDynamic = true, bool registerForStatic = false) \
+    mockName(bool registerForDynamic = GMOCKX_DYNAMIC_REGISTRATION, bool registerForStatic = GMOCKX_NO_STATIC_REGISTRATION) \
     { \
         if (registerForDynamic) \
             MockList<mockName, className>::instance().registerMock(this); \
