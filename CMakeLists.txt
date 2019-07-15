@@ -9,13 +9,16 @@ project(GMockX_tests)
 set(PROJECT_NAME_TESTS ${PROJECT_NAME})
 include_directories(${PROJECT_NAME_TESTS},
     "."
-    "tests"
-    "tests/gmock"
-    "tests/gtest"
+    "Tests"
+    "Tests/gmock"
+    "Tests/gtest"
 )
 add_executable(${PROJECT_NAME_TESTS}
-    "tests/gmock_main.cc"
-    "tests/gmock-gtest-all.cc"
-    "tests/MockListTest.cpp"
-    "tests/MocksTest.cpp"
+    "Tests/gmock_main.cc"
+    "Tests/gmock-gtest-all.cc"
+    "Tests/MockListTest.cpp"
+    "Tests/MocksTest.cpp"
 )
+if (UNIX)
+    target_link_libraries(${PROJECT_NAME_TESTS} pthread)
+endif (UNIX)
