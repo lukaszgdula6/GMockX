@@ -16,7 +16,7 @@
 
 #include "gmock.h"
 #include "gtest.h"
-#include "gtestx.hpp"
+#include "gmockx.hpp"
 
 using namespace ::testing;
 

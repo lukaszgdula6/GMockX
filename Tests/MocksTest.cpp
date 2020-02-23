@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "gtestx.hpp"
+#include "gmockx.hpp"
 #include "gmock.h"
 #include "gtest.h"
 
