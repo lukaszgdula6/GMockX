@@ -22,7 +22,7 @@ It is very simple and straightforward approach.
 To ease mocks creation Google provides simple python script which does all work for you!
 
 But...
-There is also code around where dependencies are injected as classes or - even worse - are embedded into client code itself (which is evil from my PoV). Is such a code we cannot use Google Mock easily. We need some adapter between those dependencies and Google Mocks.
+There is also code around where dependencies are injected as classes or - even worse - are embedded into client code itself. Is such a code we cannot use Google Mock easily. We need some adapter between those dependencies and Google Mocks.
 And this is why GMockX was created.
 
 # How does it work
@@ -36,7 +36,7 @@ Class -down-> Source
 @enduml
 ```
 
-Now we replace the cpp file with file with mock. Also we add an extra hpp file for that mock
+Now we replace the cpp file with file with mock adapter. Also we add an extra hpp file for that mock containing Google Mock itself.
 ```plantuml
 @startuml
 hide empty members
@@ -45,11 +45,13 @@ Class -down-> Header
 Class -down-> MockSource
 Mock -down-> MockSource
 Mock -down-> MockHeader
-MockSource --> MockAdapter
+MockSource --> GMockX
 @enduml
 ```
 
-
+Now when instance of mock is created it is registered for usage for selected class instances.
+On first call to adapter it looks for registered mocks instances, select first free and create mapping between class instance and mock instance.
+Then call is forwarded to mapped Google Mock instance.
 
 ```plantuml
 @startuml
@@ -59,11 +61,13 @@ Client <- Class : return
 
 == With GMockX ==
 Client -> Class : Call Method
-Class -> MockAdapter : Find Registered Mock Instance\nfor Class Instance
-Class <-- MockAdapter : MockInstance
+Class -> GMockX : Find Registered Mock Instance\nfor Class Instance
+Class <-- GMockX : MockInstance
 Class -> MockInstance : Call Method
 MockInstance --> "Google Mock" : Call Method
 Class <-- "Google Mock" : return
 Client <-- Class : return 
 @enduml
 ```
+
+In Example folder there is simple example of usage of GMockX: DependencyClient has dependency on SolidDependency. SolidDependencyMock is created and used in DependencyClientTestSuite.
