@@ -39,9 +39,7 @@ struct MockListTestSuite : Test
     typedef MockList<Mock1, Class1> MockList1;
     typedef MockList1::MockForNullException MockForNullException1;
     typedef MockList1::NoMockException NoMockException1;
-    typedef MockList1::PendingMockException PendingMockException1;
     typedef MockList1::MockAlreadyRegisteredException MockAlreadyRegisteredException1;
-    typedef MockList1::MockNotRegisteredException MockNotRegisteredException1;
     typedef MockList<Mock2, Class2> MockList2;
     typedef MockList2::NoMockException NoMockException2;
 
@@ -59,12 +57,6 @@ TEST_F(MockListTestSuite, shouldThrowWhenNoMocksRegistered)
 {
     Class1 c;
     EXPECT_THROW(mockList1.findMockFor(&c), NoMockException1);
-}
-
-TEST_F(MockListTestSuite, shouldNotAllowUnregisterNotRegisteredMock)
-{
-    Mock1 m;
-    EXPECT_THROW(mockList1.unregisterMock(&m), MockNotRegisteredException1);
 }
 
 TEST_F(MockListTestSuite, shouldThrowWhenMockNotCalled)
@@ -139,14 +131,6 @@ TEST_F(MockListTestSuite, shouldMockBeBindedOnce)
     EXPECT_EQ(&m1, mockList1.findMockFor(&c));
 }
 
-TEST_F(MockListTestSuite, unregisterMockShouldThrowOnUnusedMock)
-{
-    Mock1 m;
-
-    mockList1.registerMock(&m);
-    EXPECT_THROW(mockList1.unregisterMock(&m), PendingMockException1);
-}
-
 TEST_F(MockListTestSuite, unregisteredMockShouldBeNotAssigned)
 {
     Class1 c;
@@ -168,14 +152,6 @@ TEST_F(MockListTestSuite, shouldForgetMock)
     EXPECT_EQ(&m1, mockList1.findMockFor(&c));
     mockList1.forget(&m1);
     EXPECT_EQ(&m2, mockList1.findMockFor(&c));
-}
-
-TEST_F(MockListTestSuite, shouldNotForgetUnusedMock)
-{
-    Mock1 m;
-    EXPECT_THROW(mockList1.forget(&m), MockNotRegisteredException1);
-    mockList1.registerMock(&m);
-    EXPECT_THROW(mockList1.forget(&m), MockNotRegisteredException1);
 }
 
 TEST_F(MockListTestSuite, shouldRegisterStaticMock)

@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <typeinfo>
 #include <string>
+#include <type_traits>
 
 namespace testing
 {
@@ -42,17 +43,9 @@ public:
     {
         NoMockException();
     };
-    struct PendingMockException : std::runtime_error
-    {
-        PendingMockException(std::size_t numOfMocksPending);
-    };
     struct MockAlreadyRegisteredException : std::runtime_error
     {
         MockAlreadyRegisteredException(const MockType *mock);
-    };
-    struct MockNotRegisteredException : std::runtime_error
-    {
-        MockNotRegisteredException(const MockType *mock);
     };
 
     void registerMock(MockType *mock);
@@ -76,7 +69,8 @@ static bool GMOCKX_DYNAMIC_REGISTRATION = true;
 static bool GMOCKX_NO_STATIC_REGISTRATION = false;
 static bool GMOCKX_STATIC_REGISTRATION = true;
 
-#define MAKE_GMOCKX_MOCK_TORS(mockName, className) \
+#define MAKE_CUSTOM_GMOCKX_MOCK_TORS(mockName, className, MockListName) \
+    typedef MockList<mockName, className> MockListName; \
     mockName(bool registerForDynamic = GMOCKX_DYNAMIC_REGISTRATION, bool registerForStatic = GMOCKX_NO_STATIC_REGISTRATION) \
     { \
         if (registerForDynamic) \
@@ -88,6 +82,13 @@ static bool GMOCKX_STATIC_REGISTRATION = true;
     { \
         MockList<mockName, className>::instance().unregisterMock(this); \
     } \
+
+#define MAKE_GMOCKX_MOCK_TORS(mockName, className) MAKE_CUSTOM_GMOCKX_MOCK_TORS(mockName, className, MockListType)
+
+ACTION_P(Forget, mock)
+{
+    std::decay<decltype(*mock)>::type::MockListType::instance().forget(mock);
+}
 
 namespace
 {
@@ -121,17 +122,8 @@ MockList<MockType, ClassType>::NoMockException::NoMockException()
 {}
 
 template<typename MockType, typename ClassType>
-MockList<MockType, ClassType>::PendingMockException::PendingMockException(std::size_t numOfMocksPending)
-    : std::runtime_error(std::string("Total ") + std::to_string(numOfMocksPending) + " pending mock(s): " + typeid(MockType).name())
-{}
-
-template<typename MockType, typename ClassType>
 MockList<MockType, ClassType>::MockAlreadyRegisteredException::MockAlreadyRegisteredException(const MockType *mock)
     : std::runtime_error(std::string("Mock: ") + typeid(MockType).name() + " at: " + to_hex(mock) + " already registered")
-{}
-template<typename MockType, typename ClassType>
-MockList<MockType, ClassType>::MockNotRegisteredException::MockNotRegisteredException(const MockType *mock)
-    : std::runtime_error(std::string("Mock: ") + typeid(MockType).name() + " at: " + to_hex(mock) + " not registered")
 {}
 
 template<typename MockType, typename ClassType>
@@ -154,8 +146,6 @@ void MockList<MockType, ClassType>::registerStaticMock(MockType *mock)
 template<typename MockType, typename ClassType>
 void MockList<MockType, ClassType>::unregisterMock(MockType *mock)
 {
-    if (std::find(mocks.begin(), mocks.end(), mock) != mocks.end())
-        throw PendingMockException(mocks.size());
     forget(mock);
 }
 
@@ -194,7 +184,12 @@ void MockList<MockType, ClassType>::forget(const MockType *mock)
             mapping.erase(it);
             return ;
         }
-    throw MockNotRegisteredException(mock);
+    for (typename Mocks::iterator it = mocks.begin(); it != mocks.end(); ++it)
+        if (*it == mock)
+        {
+            mocks.erase(it);
+            return ;
+        }
 }
 
 template<typename MockType, typename ClassType>

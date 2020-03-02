@@ -1,2 +1,69 @@
-# GMockX
-Adapter for GMock to use with linking time polymorphism
+# What is GMockX
+Adapter for Google Mock to use with linking time polymorphism.
+In simpler words it's a framework where we instrument a linker to link mocks instead of original code.
+In even simpler words: you can replace cpp file with mocks in yours test :-)
+
+The whole framework fits in a one hpp file: gmockx.hpp so you can easily #include it in yours test project.
+
+# Why is GMockX
+GMocX was created as proof-of-concept workflow to use Google Mock in a code not using interfaces.
+Originally GMock is designed to be used with code, where dependencies are injected as C++ interfaces (pure abstract classes). Dependency interface is then implemented by Google Mock _adapter_ to provide (great!) mocking functionality.
+```plantuml
+@startuml
+hide empty members
+class CodeUnderTest
+interface Dependency
+class DependencyMock
+CodeUnderTest -down-> Dependency
+Dependency <-up- DependencyMock
+@enduml
+```
+It is very simple and straightforward approach.
+To ease mocks creation Google provides simple python script which does all work for you!
+
+But...
+There is also code around where dependencies are injected as classes or - even worse - are embedded into client code itself (which is evil from my PoV). Is such a code we cannot use Google Mock easily. We need some adapter between those dependencies and Google Mocks.
+And this is why GMockX was created.
+
+# How does it work
+To have it worked the dependency we are trying to mock has to be written using default C++ construction: a hpp files with declarations and a cpp file with definitions.
+```plantuml
+@startuml
+hide empty members
+class Class
+Class -down-> Header
+Class -down-> Source
+@enduml
+```
+
+Now we replace the cpp file with file with mock. Also we add an extra hpp file for that mock
+```plantuml
+@startuml
+hide empty members
+class Class
+Class -down-> Header
+Class -down-> MockSource
+Mock -down-> MockSource
+Mock -down-> MockHeader
+MockSource --> MockAdapter
+@enduml
+```
+
+
+
+```plantuml
+@startuml
+== Original source code ==
+Client -> Class : Call Method
+Client <- Class : return
+
+== With GMockX ==
+Client -> Class : Call Method
+Class -> MockAdapter : Find Registered Mock Instance\nfor Class Instance
+Class <-- MockAdapter : MockInstance
+Class -> MockInstance : Call Method
+MockInstance --> "Google Mock" : Call Method
+Class <-- "Google Mock" : return
+Client <-- Class : return 
+@enduml
+```
